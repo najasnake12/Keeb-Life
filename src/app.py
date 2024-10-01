@@ -1,17 +1,14 @@
+# Made by najasnake12
+# also known as the official -10x developer.
+# Shoutout to Chris Sawyer
+
+
 from flask import Flask, render_template, request, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
+import hashlib
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Optional, to suppress warnings
-db = SQLAlchemy(app)
-
-# Models
-class Signup(db.Model):
-    id = db.Column(db.Integer, primary_key=True)  # Add a primary key
-    username = db.Column(db.String(15), unique=False, nullable=False)
-    password = db.Column(db.String(20), unique=False, nullable=False)
+users_file = 'C:/Users/pessi/OneDrive/Desktop/Social Media For Keyboards/src/instance/users.txt' # For now the database is in a txt file, probably going to change this later
 
 # Routes
 @app.route('/')
@@ -30,10 +27,20 @@ def signup_page():
             password = request.form.get('password')
         
             if username and password:
-                new_user = Signup(username=username, password=password)
-                db.session.add(new_user)
-                db.session.commit()
-                return redirect(url_for('login')) # Redirect to login if the user signed up succesfully
+                try:
+                    with open(users_file, 'a') as file:
+                        sha256_hash = hashlib.sha256()
+    
+                        sha256_hash.update(password.encode('utf-8'))
+                        
+                        hashed_password = sha256_hash.hexdigest()
+                        
+                        file.write(f'{username},{hashed_password}')
+                except BaseException as e:
+                    print(f'Error: {e}')
+                    return render_template('error.html')
+                    # maybe also give them a small message that they signed up?
+                return redirect(url_for('login_page')) # Redirect to login if the user signed up succesfully
             else:
                 return redirect(url_for('signup_page')) # For now, if the the username and or password was empty redirect to signup again.
     except BaseException as e:
@@ -42,8 +49,29 @@ def signup_page():
     
     return render_template('signup.html')
 
-@app.route('/login')
-def login():
+@app.route('/login_page', methods=['GET', 'POST'])
+def login_page():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        try:
+            with open(users_file, 'r') as file:
+                
+                for line in file:
+                    stored_username, stored_password = line.strip().split(',')
+                    
+                    check_if_user_entered_the_correct_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+                    if stored_username == username and stored_password == check_if_user_entered_the_correct_password:
+                        return render_template('my_account.html')
+                else:
+                    return render_template('error1.html')
+                    
+        except BaseException as e:
+            print(f'Error: {e}')
+            return render_template('error.html')
+        
     return render_template('login.html')
 
 @app.route('/my_account')
