@@ -10,5 +10,12 @@
     <a href="{{ url_for('login_page')}}">Login</a>
     <a href="{{ url_for('my_account')}}">Me</a>
     <h1>Post Something</h1>
+
+    <form method="POST" action="post" enctype="multipart/form-data">
+        <input name="title" type="text" placeholder="Title" required>
+        <input name="description" type="text" placeholder="Description" required>
+        <input name="image" type="file" accept=".jpg,.png,.jpeg" placeholder="Image (optional)">  <!-- Removed trailing comma -->
+        <input type="submit" value="Post">
+    </form>
 </body>
 </html>
